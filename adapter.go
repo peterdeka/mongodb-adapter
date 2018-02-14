@@ -19,7 +19,7 @@ import (
 
 	"github.com/casbin/casbin/model"
 	"github.com/casbin/casbin/persist"
-	"gopkg.in/mgo.v2"
+	"github.com/globalsign/mgo"
 )
 
 // CasbinRule represents a rule in Casbin.
@@ -59,6 +59,29 @@ func NewAdapter(url string) persist.Adapter {
 	return a
 }
 
+// NewAdapterWithDB is the constructor for Adapter that uses an already
+// existing Mongo DB connection.
+func NewAdapterWithDB(thedb *mgo.Database) persist.Adapter {
+	a := &adapter{session: thedb.Session}
+	a.openWithDB(thedb)
+
+	//no finalizer as the caller will close its connection
+
+	return a
+}
+
+func (a *adapter) openWithDB(db *mgo.Database) {
+	collection := db.C("casbin_rule")
+	a.collection = collection
+
+	indexes := []string{"ptype", "v0", "v1", "v2", "v3", "v4", "v5"}
+	for _, k := range indexes {
+		if err := a.collection.EnsureIndexKey(k); err != nil {
+			panic(err)
+		}
+	}
+}
+
 func (a *adapter) open() {
 	dI, err := mgo.ParseURL(a.url)
 	if err != nil {
@@ -82,17 +105,8 @@ func (a *adapter) open() {
 	}
 
 	db := session.DB(dI.Database)
-	collection := db.C("casbin_rule")
-
 	a.session = session
-	a.collection = collection
-
-	indexes := []string{"ptype", "v0", "v1", "v2", "v3", "v4", "v5"}
-	for _, k := range indexes {
-		if err := a.collection.EnsureIndexKey(k); err != nil {
-			panic(err)
-		}
-	}
+	a.openWithDB(db)
 }
 
 func (a *adapter) close() {
