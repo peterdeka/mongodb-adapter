@@ -26,7 +26,7 @@ var testDbURL = os.Getenv("TEST_MONGODB_URL")
 
 func getDbURL() string {
 	if testDbURL == "" {
-		testDbURL = "127.0.0.1:27017"
+		testDbURL = "mongodb://127.0.0.1:27017"
 	}
 	return testDbURL
 }
