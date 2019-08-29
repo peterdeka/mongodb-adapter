@@ -86,7 +86,7 @@ func (a *adapter) openWithDB(db *mongo.Database) {
 	indexes := []string{"ptype", "v0", "v1", "v2", "v3", "v4", "v5"}
 	models := []mongo.IndexModel{}
 	opts := options.Index()
-	opts.SetBackground(false).SetUnique(true)
+	opts.SetBackground(false)
 	for _, k := range indexes {
 		models = append(models, mongo.IndexModel{Keys: bsonx.Doc{{Key: k, Value: bsonx.Int32(1)}}, Options: opts})
 	}
